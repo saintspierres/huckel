@@ -85,7 +85,15 @@ int main(int argc, char *argv[])
        printf("%12.6lf%12.6lf%12.6lf\n", xyz[i][0], xyz[i][1], xyz[i][2]);
     }
 */
-    plot3d(nhelts, helts, natom, elts, xyz, eigvct, 0);
+    sscanf(argv[2], "%d", &i);
+    if(i>0&&i<=nhelts)
+    {
+        plot3d(nhelts, helts, natom, elts, xyz, eigvct, eigval[i-1], i-1);
+    }
+    else
+    {
+        fprintf(stderr, "huckel: Bad orbital number\nPlease, choose a number between %d and %d\n", 1, nhelts);
+    }
 }
 
 void rxyz(char *filename, int *natom, int *elts, double xyz[][CRD_SIZE])
@@ -355,11 +363,13 @@ void rotate(int natom, double xyz[][CRD_SIZE])
 
 void comp2p(double Z, double x, double y, double z, double *psi)
 {
-    double r=0.;
+
+    double pi = acos(-1.);
+    double r = 0.;
 
     r = sqrt( pow(x, 2.) + pow(y, 2.) + pow(z, 2.) );
 
-    *psi= z * Z * exp(-r*Z/2.);
+    *psi= z * pow(Z, 2.5) * exp(-r*Z/2.) / sqrt(32. * pi);
 }
 
 void compom(int nhelts, int *helts, int *elts, double xyz[][CRD_SIZE], 
@@ -368,21 +378,23 @@ void compom(int nhelts, int *helts, int *elts, double xyz[][CRD_SIZE],
 {
     int i;
 
+    double x0=0., y0=0., z0=0.;
+
     double psi=0.;
 
     *om=0.;
     for(i=0; i<nhelts; i++)
     {
-        x=x-xyz[helts[i]][0];
-        y=y-xyz[helts[i]][1];
-        z=z-xyz[helts[i]][2];
-        comp2p((double) elts[helts[i]], x, y, z, &psi);
+        x0=x-xyz[helts[i]][0];
+        y0=y-xyz[helts[i]][1];
+        z0=z-xyz[helts[i]][2];
+        comp2p((double) elts[helts[i]], x0, y0, z0, &psi);
         *om+=eigvct[i][numorb]*psi;
     }
 }
 
 void plot3d(int nhelts, int *helts, int natom, int *elts, double xyz[][CRD_SIZE],
-    double eigvct[][TAB_SIZE], int numorb)
+    double eigvct[][TAB_SIZE], double eigval, int numorb)
 {
     int i, j, k, l;
     int Nx=80, Ny=80, Nz=80;
@@ -395,7 +407,7 @@ void plot3d(int nhelts, int *helts, int natom, int *elts, double xyz[][CRD_SIZE]
 
     double x, y, z, om;
 
-    printf("orbitale 1s\nMO coefficients\n");
+    printf("Energy: %12.6lf\nMO coefficients\n", eigval);
     printf("%5d%12.6f%12.6f%12.6f\n", -natom, x0, y0, z0);
     printf("%5d%12.6f%12.6f%12.6f\n", Nx, Stpx[0], Stpx[1], Stpx[2]);
     printf("%5d%12.6f%12.6f%12.6f\n", Ny, Stpy[0], Stpy[1], Stpy[2]);
@@ -404,7 +416,7 @@ void plot3d(int nhelts, int *helts, int natom, int *elts, double xyz[][CRD_SIZE]
     {
         printf("%5d%12.6lf%12.6f%12.6f%12.6f\n", elts[i], (double) elts[i], xyz[i][0], xyz[i][1], xyz[i][2]);
     }
-    printf("%5d%5d\n", 1, 1);
+    printf("%5d%5d\n", 1, numorb+1);
 
     for(i=0; i<Nx; i++)
     {
@@ -416,8 +428,8 @@ void plot3d(int nhelts, int *helts, int natom, int *elts, double xyz[][CRD_SIZE]
                 x=x0+i*Stpx[0]+j*Stpx[1]+k*Stpx[2];
                 y=y0+i*Stpy[0]+j*Stpy[1]+k*Stpy[2];
                 z=z0+i*Stpz[0]+j*Stpz[1]+k*Stpz[2];
-                compom(nhelts, helts, elts, xyz, x, y, z, eigvct, numorb, &om);
-                //printf("%12.6lf%12.6lf%12.6lf%13.5lE\n", x, y, z, om);
+		compom(nhelts, helts, elts, xyz, x, y, z, eigvct, numorb, &om);
+		//printf("%12.6lf%12.6lf%12.6lf%13.5lE\n", x, y, z, om);
                 printf("%13.5lE", om);
                 l++;
                 if(l==6)

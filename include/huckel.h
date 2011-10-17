@@ -26,4 +26,4 @@ void compom(int nhelts, int *helts, int *elts, double xyz[][CRD_SIZE],
     double x, double y, double z, double eigvct[][TAB_SIZE], int numorb,
     double *om);
 void plot3d(int nhelts, int *helts, int natom, int *elts, double xyz[][CRD_SIZE],
-    double eigvct[][TAB_SIZE], int numorb);
+    double eigvct[][TAB_SIZE], double eigval, int numorb);
